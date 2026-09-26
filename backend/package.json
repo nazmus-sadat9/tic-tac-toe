@@ -1,0 +1,14 @@
+{
+  "name": "backend",
+  "version": "0.1.0",
+  "description": "This is the backend of tic tac toe game.",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "dev": "npx nodemon main.js"
+  },
+  "keywords": ["Game"],
+  "author": "Nazmus Sadat",
+  "license": "MIT",
+  "type": "module"
+}
