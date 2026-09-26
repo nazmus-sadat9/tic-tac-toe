@@ -1,29 +1,44 @@
-import { WebSocketServer, WebSocket } from "ws";
+import { Server } from "socket.io";
 
-function initWebSocketServer(server) {
+let io;
 
-  const wss = new WebSocketServer({ server });
+export const initSocket = (httpServer) => {
+  io = new Server(httpServer, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"]
+    }
+  });
 
-  wss.on("connection", (ws) => {
-    console.log("Player joined.");
+  io.on("connection", (socket) => {
+    console.log(`Client connected: ${socket.id}`);
 
-    ws.send(JSON.stringify({ message: "Connected to WebSocket" }));
+    // join a room
+    socket.on("join-room", (roomId) => {
+      socket.join(roomId);
+      socket.roomId = roomId;
 
-    // incomming messages
-    ws.on("message", (data) => {
-      console.log("Received:", data.toString();
+      console.log(`Socket ${socket.id} joined room: ${roomId}`);
+
+      socket.to(roomId).emit('user-joined', { userId: socket.id });
     });
 
-    ws.on("close", () => {
-      console.log("Player disconnected");
-    });
-
-    ws.on("error", (err) => {
-      console.error("WebSocket error:", err);
+    // Disconnect event
+    socket.on("disconnect", () => {
+      if (socket.roomId) {
+        socket.to(socket.roomId).emit('user-left', socket.id);
+      }
+      console.log(`player disconnected: ${socket.id}`);
     });
   });
 
-  return wss;
-}
+  return io;
+};
 
-export default initWebSocketServer;
+
+export const getIO = () => {
+  if (!io) {
+    throw new Error('Socket.io has not been initialized!');
+  }
+  return io;
+};

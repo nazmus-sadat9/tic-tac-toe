@@ -7,8 +7,19 @@
     "start": "node main.js",
     "dev": "npx nodemon main.js"
   },
-  "keywords": ["Game"],
+  "keywords": [
+    "Game"
+  ],
   "author": "Nazmus Sadat",
   "license": "MIT",
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.4",
+    "express": "^5.2.1",
+    "socket.io": "^4.8.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
 }
