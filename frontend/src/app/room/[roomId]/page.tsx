@@ -4,13 +4,16 @@ import { useParams } from "next/navigation";
 import { getSocket } from "../../lib/socket";
 import { useState, useEffect } from "react";
 
+type Player = "X" | "O";
+type Cell = Player | null;
+
 const winPatterns = [
   [0,1,2],[3,4,5],[6,7,8],
   [0,3,6],[1,4,7],[2,5,8],
   [0,4,8],[2,4,6],
 ];
 
-function checkWinner(board) {
+function checkWinner(board: Cell[]): Player | null {
   for (const [a, b, c] of winPatterns) {
     if (board[a] && board[a] === board[b] && board[a] === board[c]) {
       return board[a];
@@ -21,9 +24,9 @@ function checkWinner(board) {
 
 const Page = () => {
   const { roomId } = useParams();
-  const [board, setBoard] = useState(Array(9).fill(null));
-  const [mySymbol, setMySymbol] = useState(null);
-  const [currentPlayer, setCurrentPlayer] = useState("X");
+  const [board, setBoard] = useState<Cell[]>(Array(9).fill(null));
+  const [mySymbol, setMySymbol] = useState<string>(null);
+  const [currentPlayer, setCurrentPlayer] = useState<string>("X");
 
   useEffect(() => {
     const socket = getSocket();
@@ -57,7 +60,7 @@ const Page = () => {
   const winner = checkWinner(board);
   const isDraw = !winner && board.every((cell) => cell !== null);
 
-  function handleClick(index) {
+  function handleClick(index: number) {
     if (board[index] || winner || mySymbol !== currentPlayer) return;
 
     const socket = getSocket();
