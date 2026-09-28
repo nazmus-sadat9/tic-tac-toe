@@ -4,9 +4,9 @@ let io;
 const rooms = new Map();
 
 const winPatterns = [
-  [0,1,2],[3,4,5],[6,7,8],
-  [0,3,6],[1,4,7],[2,5,8],
-  [0,4,8],[2,4,6],
+  [0, 1, 2], [3, 4, 5], [6, 7, 8],
+  [0, 3, 6], [1, 4, 7], [2, 5, 8],
+  [0, 4, 8], [2, 4, 6],
 ];
 
 function checkWinner(board) {
@@ -38,7 +38,6 @@ export function initSocket(httpServer) {
   io.on("connection", (socket) => {
     console.log("Client connected:", socket.id);
 
-    // create a room
     socket.on("create-room", () => {
       const roomId = generateRoomId();
 
@@ -56,7 +55,6 @@ export function initSocket(httpServer) {
       broadcastPlayerCount(roomId);
     });
 
-    // join a room
     socket.on("join-room", (roomId) => {
       if (!roomId || !rooms.has(roomId)) {
         socket.emit("room-error", "Room not found");
@@ -64,6 +62,13 @@ export function initSocket(httpServer) {
       }
 
       const room = rooms.get(roomId);
+
+      if (room.players.has(socket.id)) {
+        socket.emit("player-symbol", room.players.get(socket.id));
+        socket.emit("sync-board", { board: room.board, turn: room.turn });
+        broadcastPlayerCount(roomId);
+        return;
+      }
 
       if (room.players.size >= 2) {
         socket.emit("room-error", "Room full");
@@ -73,18 +78,17 @@ export function initSocket(httpServer) {
       socket.join(roomId);
       socket.roomId = roomId;
 
-      const symbol = "O"; 
+      const symbol = "O";
       room.players.set(socket.id, symbol);
 
       socket.emit("room-joined", roomId);
       socket.emit("player-symbol", symbol);
-      socket.emit("sync-board", room.board);
+      socket.emit("sync-board", { board: room.board, turn: room.turn });
 
       socket.to(roomId).emit("user-joined", socket.id);
       broadcastPlayerCount(roomId);
     });
 
-    // make a move
     socket.on("make-move", ({ roomId, index, symbol }) => {
       const room = rooms.get(roomId);
       if (!room) return;
@@ -101,11 +105,10 @@ export function initSocket(httpServer) {
       if (winner) {
         io.to(roomId).emit("game-over", { winner });
       } else if (room.board.every((cell) => cell !== null)) {
-        io.to(roomId).emit("game-over", { winner: null }); // draw
+        io.to(roomId).emit("game-over", { winner: null });
       }
     });
 
-    // reset game
     socket.on("reset-game", (roomId) => {
       const room = rooms.get(roomId);
       if (!room) return;
@@ -116,7 +119,6 @@ export function initSocket(httpServer) {
       io.to(roomId).emit("game-reset");
     });
 
-    // disconnect a player
     socket.on("disconnect", () => {
       console.log("Client disconnected:", socket.id);
 
